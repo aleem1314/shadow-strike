@@ -51,9 +51,7 @@ task("task:decrypt-result", "Decrypts the last battle result of a player")
  */
 task("task:register", "Register a new player in ShadowStrike")
   .addParam("player", "The player's address")
-  .addParam("hp", "Player HP")
-  .addParam("attack", "Player Attack")
-  .addParam("defense", "Player Defense")
+  .addParam("name", "Player name")
   .addOptionalParam("address", "ShadowStrike contract address")
   .setAction(async function (args: TaskArguments, hre) {
     const { ethers, deployments, fhevm } = hre;
@@ -62,19 +60,7 @@ task("task:register", "Register a new player in ShadowStrike")
     const contractInfo = args.address ? { address: args.address } : await deployments.get("ShadowStrike");
     const shadowStrike = await ethers.getContractAt("ShadowStrike", contractInfo.address);
 
-    // Encrypt stats
-    const encryptedStats = await fhevm
-      .createEncryptedInput(contractInfo.address, args.player)
-      .add32(parseInt(args.hp))
-      .add32(parseInt(args.attack))
-      .add32(parseInt(args.defense))
-      .encrypt();
-
-    const tx = await shadowStrike.registerPlayer(
-      encryptedStats.handles[0],
-      encryptedStats.handles[1],
-      encryptedStats.handles[2],
-      encryptedStats.inputProof
+    const tx = await shadowStrike.registerPlayer(args.name
     );
     console.log(`Register tx: ${tx.hash}`);
     const receipt = await tx.wait();

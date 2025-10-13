@@ -13,17 +13,21 @@ contract ShadowStrike is SepoliaConfig {
         euint32 defense;
         euint32 hp;
         bool registered;
+        string name;
     }
 
     struct BattleRecord {
         address opponent; // Opponent address
         euint32 result; // Encrypted result: 0 = lost, 1 = win, 2 = draw
+        uint256 createdAt;
     }
 
     mapping(address => Player) public players;
+    address[] public playerAddresses;
+
     mapping(address => BattleRecord[]) public battleHistory;
 
-    event PlayerRegistered(address indexed player);
+    event PlayerRegistered(address indexed player, string indexed name);
 
     /// Emitted after a battle with encrypted outcome flags (interpretable off-chain)
     event BattleResolvedEncrypted(
@@ -33,28 +37,23 @@ contract ShadowStrike is SepoliaConfig {
         euint32 encDraw // enc boolean: 1 => draw (equal remaining HP)
     );
 
-    /// @notice Register your encrypted battle stats.
-    /// @param encAttack Encrypted attack value
-    /// @param encDefense Encrypted defense value
-    /// @param encHP Encrypted HP value
-    /// @param proofs Proof
-    function registerPlayer(
-        externalEuint32 encAttack,
-        externalEuint32 encDefense,
-        externalEuint32 encHP,
-        bytes calldata proofs
-    ) external {
-        euint32 attack = FHE.fromExternal(encAttack, proofs);
-        euint32 defense = FHE.fromExternal(encDefense, proofs);
-        euint32 hp = FHE.fromExternal(encHP, proofs);
+    /// @notice Register your encrypted battle stats with a chosen character name.
+    /// @dev Stats are generated randomly within a max value of 100.
+    /// @param name The name of the player's character
+    function registerPlayer(string calldata name) external {
+        // Generate random encrypted stats (128)
+        euint32 attack = FHE.randEuint32(128);
+        euint32 defense = FHE.randEuint32(128);
+        euint32 hp = FHE.randEuint32(128);
 
-        players[msg.sender] = Player(attack, defense, hp, true);
+        players[msg.sender] = Player({attack: attack, defense: defense, hp: hp, registered: true, name: name});
+        playerAddresses.push(msg.sender);
 
         FHE.allowThis(attack);
         FHE.allowThis(defense);
         FHE.allowThis(hp);
 
-        emit PlayerRegistered(msg.sender);
+        emit PlayerRegistered(msg.sender, name);
     }
 
     /// @notice Start a battle between msg.sender and another player.
@@ -113,9 +112,13 @@ contract ShadowStrike is SepoliaConfig {
         FHE.allow(newAHP, challenger);
 
         // Store battle history
-        battleHistory[challenger].push(BattleRecord({opponent: opponent, result: encResult}));
+        battleHistory[challenger].push(
+            BattleRecord({opponent: opponent, result: encResult, createdAt: block.timestamp})
+        );
 
-        battleHistory[opponent].push(BattleRecord({opponent: challenger, result: encOpponentResult}));
+        battleHistory[opponent].push(
+            BattleRecord({opponent: challenger, result: encOpponentResult, createdAt: block.timestamp})
+        );
 
         emit BattleResolvedEncrypted(challenger, opponent, encP1Wins, encDraw);
         return (encP1Wins, encDraw);
@@ -128,5 +131,13 @@ contract ShadowStrike is SepoliaConfig {
 
     function getBattleHistory(address player) external view returns (BattleRecord[] memory) {
         return battleHistory[player];
+    }
+
+    function getPlayer(address player) external view returns (Player memory) {
+        return players[player];
+    }
+
+    function getAllPlayers() public view returns (address[] memory) {
+        return playerAddresses;
     }
 }

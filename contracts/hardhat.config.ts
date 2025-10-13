@@ -10,12 +10,12 @@ import { vars } from "hardhat/config";
 import "solidity-coverage";
 
 import "./tasks/accounts";
-import "./tasks/FHECounter";
+import "./tasks/ShadowStrike";
 
 // Run 'npx hardhat vars setup' to see the list of variables that need to be set
 
-const MNEMONIC: string = vars.get("MNEMONIC", "test test test test test test test test test test test junk");
-const INFURA_API_KEY: string = vars.get("INFURA_API_KEY", "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+const MNEMONIC: string = vars.get("MNEMONIC", "lazy flame file high bronze wave frog pencil unaware toddler tackle add");
+const INFURA_API_KEY: string = vars.get("INFURA_API_KEY", "1a1846089b024a70ad34a3ce32a37b09");
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",

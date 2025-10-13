@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Battle Arena</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-black text-white min-h-screen">
+  <header class="flex justify-between items-center p-6 border-b border-gray-800">
+    <h1 class="text-2xl font-bold">⚔️ Secret Battle Arena</h1>
+    <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg">Connect Wallet</button>
+  </header>
+
+  <main class="max-w-4xl mx-auto mt-12">
+    <h2 class="text-4xl font-bold text-center mb-8">🏟️ Choose Your Opponent</h2>
+
+    <div class="flex justify-center mb-6">
+      <input type="text" placeholder="Search by address or nickname" class="w-1/2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg" />
+    </div>
+
+    <div class="space-y-4">
+      <!-- Player Card -->
+      <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl hover:bg-gray-700 transition">
+        <div>
+          <h3 class="font-semibold">Player #0xA23...F8C1</h3>
+          <p class="text-gray-400 text-sm">Wins: 12 | Losses: 5 | Last Active: 2h ago</p>
+        </div>
+        <button class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg">⚔️ Challenge</button>
+      </div>
+
+      <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl hover:bg-gray-700 transition">
+        <div>
+          <h3 class="font-semibold">Player #0xB91...DA32</h3>
+          <p class="text-gray-400 text-sm">Wins: 5 | Losses: 2 | Last Active: 1h ago</p>
+        </div>
+        <button class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg">⚔️ Challenge</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
