@@ -25,7 +25,7 @@ const FightHistory: React.FC = () => {
     const [records, setRecords] = useState<BattleRecord[] | undefined>();
 
     const [decryptLoading, setDecryptLoading] = useState(false);
-    const onDecrypt = async () => {
+    const onDecryptAll = async () => {
         setDecryptLoading(true);
         try {
             const result = await decrypt(
@@ -36,6 +36,23 @@ const FightHistory: React.FC = () => {
         } catch (err: any) {
             showSnackbar(err.message || JSON.stringify(err), "error");
         } finally {
+            setDecryptLoading(false);
+        }
+    }
+
+    const [decryptIndex, setDecryptIndex] = useState<number>(-1);
+    const onDecrypt = async (cyphertext: string, i: number) => {
+        setDecryptIndex(i);
+        setDecryptLoading(true);
+        try {
+            const result = await decrypt(
+                [cyphertext]
+            );
+            console.log(result);
+        } catch (err: any) {
+            showSnackbar(err.message || JSON.stringify(err), "error");
+        } finally {
+            setDecryptIndex(-1);
             setDecryptLoading(false);
         }
     }
@@ -57,11 +74,11 @@ const FightHistory: React.FC = () => {
     }, [wallet]);
 
     return (
-        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg max-w-7xl mx-auto">
+        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold">⚔️ Fight History</h2>
                 <button
-                    onClick={onDecrypt}
+                    onClick={onDecryptAll}
                     disabled={decryptLoading}
                     className={`px-6 py-3 rounded-lg transition hover:cursor-pointer ${decryptLoading
                         ? "bg-yellow-500 text-black hover:bg-yellow-600"
@@ -69,7 +86,7 @@ const FightHistory: React.FC = () => {
                         }`}
                 >
                     {
-                        decryptLoading ? `Decrypting...` : 'Decrypt All'
+                        decryptLoading && decryptIndex === -1 ? `Decrypting...` : 'Decrypt All'
                     }
                 </button>
             </div>
@@ -97,7 +114,7 @@ const FightHistory: React.FC = () => {
                                     :
                                     records.map((fight, index) => (
                                         <tr key={index} className="hover:bg-gray-700/40 transition">
-                                            <td className="px-4 py-2 text-gray-100">{index}</td>
+                                            <td className="px-4 py-2 text-gray-100">{index + 1}</td>
                                             <td className="px-4 py-2 text-purple-400 font-semibold">{fight.opponent}</td>
                                             <td
                                                 className={`px-4 py-2 text-center font-bold`}
@@ -106,13 +123,23 @@ const FightHistory: React.FC = () => {
                                             </td>
                                             <td className="px-4 py-2 text-center text-gray-200">{formatTimestamp(parseInt(fight.createdAt) || 0)}</td>
 
-                                            <td>
+                                            <td className="px-4 py-2 text-center text-gray-200">
                                                 <button
-                                                    className={`px-6 py-3 rounded-lg transition hover:cursor-pointer ${decryptLoading
+                                                    onClick={() => {
+                                                        onDecrypt(fight.result, index)
+                                                    }}
+                                                    className={`px-3 py-2 rounded-lg transition hover:cursor-pointer ${decryptLoading
                                                         ? "bg-yellow-500 text-black hover:bg-yellow-600"
                                                         : "bg-green-600 text-white hover:bg-green-800"
                                                         }`}
-                                                >Decrypt</button>
+                                                >
+                                                    {
+                                                        decryptLoading && decryptIndex === index ?
+                                                            `Decrypting...`
+                                                            :
+                                                            `Decrypt`
+                                                    }
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}

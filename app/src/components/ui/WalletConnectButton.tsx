@@ -41,7 +41,7 @@ export default function ConnectWalletButton() {
         return (
             <button
                 onClick={connectWallet}
-                className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition"
+                className="px-6 py-3 bg-green-600 hover:bg-green-700 hover:cursor-pointer rounded-lg font-semibold transition"
             >
                 Connect Wallet
             </button>
@@ -56,7 +56,7 @@ export default function ConnectWalletButton() {
                     <span className="text-gray-400 text-xs">{shortAddress(account)}</span>
                     <button
                         onClick={copyAddress}
-                        className="p-1 rounded hover:bg-gray-700 transition"
+                        className="p-1 rounded hover:bg-gray-700 transition hover:cursor-pointer"
                         title="Copy Address"
                     >
                         {copied ? (
@@ -69,7 +69,7 @@ export default function ConnectWalletButton() {
             </div>
             <button
                 onClick={resetWallet}
-                className="p-1 rounded hover:bg-gray-700 transition"
+                className="p-1 rounded hover:bg-gray-700 transition hover:cursor-pointer"
                 title="Disconnect"
             >
                 <ArrowRightEndOnRectangleIcon className="h-5 w-5 text-red-400 hover:text-red-500" />

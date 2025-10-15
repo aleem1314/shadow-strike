@@ -150,7 +150,7 @@ const BattleArenaPage: React.FC = () => {
                                                         {player.address}
                                                     </p>
                                                 </div>
-                                                <button className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg"
+                                                <button className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg hover:cursor-pointer"
                                                     onClick={() => {
                                                         onChallenge(player.address!!, player.name)
                                                     }}

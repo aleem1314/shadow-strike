@@ -31,7 +31,7 @@ export default function ConnectWalletPrompt() {
             </h2>
             <button
                 onClick={connectWallet}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition hover:cursor-pointer"
+                className="bg-green-600 hover:bg-green-700 hover:cursor-pointer text-white px-4 py-2 rounded-lg transition"
             >
                 Connect Wallet
             </button>
