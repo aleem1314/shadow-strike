@@ -7,8 +7,6 @@ import { FHEService } from './lib/fheService';
 import Landing from './pages/Landing';
 import RegisterPage from './pages/Register';
 import BattleArenaPage from './pages/BattleArena';
-import LeaderboardPage from './pages/Leaderboard';
-import BattlePage from './pages/Battle';
 import HowItWorks from './pages/HowItWorks';
 import FightHistory from './pages/FightHistory';
 
@@ -32,8 +30,6 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/battle-arena" element={<BattleArenaPage />} />
             <Route path="/history" element={<FightHistory />} />
-            <Route path="/arena" element={<BattlePage />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/how-works" element={<HowItWorks />} />
           </Routes>
           :

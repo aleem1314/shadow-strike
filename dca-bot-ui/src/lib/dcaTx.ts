@@ -2,11 +2,13 @@ import { ethers } from 'ethers';
 import contractJson from './ShadowStrike.json';
 import type { ShadowStrike } from "./ShadowStrike";
 
-export const contractAddress = import.meta.env.VITE_CONTRACT || "0xf5273695AD7171F73AcFF2C0Acd41675B47ebE1A";
+export const contractAddress = import.meta.env.VITE_CONTRACT || "0x696Dc917e38C04a57685bF47F695466AabF9DAe4";
 export const ABI = contractJson.abi;
 
 export interface TransactionConfirmation {
     hash: string;
+    battleID?: string;
+    encResult?: string;
 }
 
 export async function getProviderAndSigner() {
@@ -56,22 +58,52 @@ export async function register(name: string): Promise<TransactionConfirmation> {
     }
 }
 
-export async function battle(planId: number): Promise<TransactionConfirmation> {
+export async function battle(opponent: string): Promise<TransactionConfirmation> {
 
-    // const contract = await getContract();
-    // try {
-    //     const tx = await contract.pausePlan(planId);
+    const contract = await getContract();
+    try {
 
-    //     const receipt = await tx.wait();
-    //     console.log("Transaction confirmed:", receipt);
-    //     return {
-    //         hash: receipt?.hash || ""
-    //     }
-    // } catch (err) {
-    //     console.error("Error sending transaction:", err);
-    //     throw err;
-    // }
+        const tx = await contract.battle(opponent, {
+            gasLimit: 3_500_000n,
+        });
 
-    throw new Error("");
+        const receipt = await tx.wait();
+        console.log("Transaction confirmed:", receipt);
+
+        // Use the contract interface to parse logs
+        const iface = contract.interface;
+        const battleEvents = receipt?.logs
+            .map((log: any) => {
+                try {
+                    return iface.parseLog(log);
+                } catch {
+                    return null;
+                }
+            })
+            .filter((e: any) => e && e.name === "BattleResolvedEncrypted");
+
+        if (!battleEvents) {
+            throw new Error("BattleResolvedEncrypted event not found");
+        }
+
+        if (battleEvents.length === 0) {
+            throw new Error("BattleResolvedEncrypted event not found");
+        }
+
+        console.log(battleEvents);
+
+        // Usually only one event per transaction
+        const event = battleEvents[0];
+        const { battleId, encResult } = event?.args || { battleId: 0, encResult: "" };
+
+        return {
+            hash: receipt?.hash || "",
+            battleID: battleId.toString(),
+            encResult: encResult,
+        }
+    } catch (err) {
+        console.error("Error sending transaction:", err);
+        throw err;
+    }
 }
 

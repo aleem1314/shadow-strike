@@ -21,20 +21,22 @@ import type {
   TypedLogDescription,
   TypedListener,
   TypedContractMethod,
-} from "./common";
+} from "../common";
 
 export declare namespace ShadowStrike {
   export type BattleRecordStruct = {
+    id: BigNumberish;
     opponent: AddressLike;
     result: BytesLike;
     createdAt: BigNumberish;
   };
 
   export type BattleRecordStructOutput = [
+    id: bigint,
     opponent: string,
     result: string,
     createdAt: bigint
-  ] & { opponent: string; result: string; createdAt: bigint };
+  ] & { id: bigint; opponent: string; result: string; createdAt: bigint };
 
   export type PlayerStruct = {
     attack: BytesLike;
@@ -63,6 +65,7 @@ export interface ShadowStrikeInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "battle"
+      | "battleCounter"
       | "battleHistory"
       | "getAllPlayers"
       | "getBattleHistory"
@@ -79,6 +82,10 @@ export interface ShadowStrikeInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(functionFragment: "battle", values: [AddressLike]): string;
+  encodeFunctionData(
+    functionFragment: "battleCounter",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "battleHistory",
     values: [AddressLike, BigNumberish]
@@ -118,6 +125,10 @@ export interface ShadowStrikeInterface extends Interface {
 
   decodeFunctionResult(functionFragment: "battle", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "battleCounter",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "battleHistory",
     data: BytesLike
   ): Result;
@@ -150,20 +161,20 @@ export namespace BattleResolvedEncryptedEvent {
   export type InputTuple = [
     challenger: AddressLike,
     opponent: AddressLike,
-    encP1Wins: BytesLike,
-    encDraw: BytesLike
+    battleId: BigNumberish,
+    encResult: BytesLike
   ];
   export type OutputTuple = [
     challenger: string,
     opponent: string,
-    encP1Wins: string,
-    encDraw: string
+    battleId: bigint,
+    encResult: string
   ];
   export interface OutputObject {
     challenger: string;
     opponent: string;
-    encP1Wins: string;
-    encDraw: string;
+    battleId: bigint;
+    encResult: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -227,16 +238,15 @@ export interface ShadowStrike extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  battle: TypedContractMethod<
-    [opponent: AddressLike],
-    [[string, string] & { encP1Wins: string; encDraw: string }],
-    "nonpayable"
-  >;
+  battle: TypedContractMethod<[opponent: AddressLike], [string], "nonpayable">;
+
+  battleCounter: TypedContractMethod<[], [bigint], "view">;
 
   battleHistory: TypedContractMethod<
     [arg0: AddressLike, arg1: BigNumberish],
     [
-      [string, string, bigint] & {
+      [bigint, string, string, bigint] & {
+        id: bigint;
         opponent: string;
         result: string;
         createdAt: bigint;
@@ -287,17 +297,17 @@ export interface ShadowStrike extends BaseContract {
 
   getFunction(
     nameOrSignature: "battle"
-  ): TypedContractMethod<
-    [opponent: AddressLike],
-    [[string, string] & { encP1Wins: string; encDraw: string }],
-    "nonpayable"
-  >;
+  ): TypedContractMethod<[opponent: AddressLike], [string], "nonpayable">;
+  getFunction(
+    nameOrSignature: "battleCounter"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "battleHistory"
   ): TypedContractMethod<
     [arg0: AddressLike, arg1: BigNumberish],
     [
-      [string, string, bigint] & {
+      [bigint, string, string, bigint] & {
+        id: bigint;
         opponent: string;
         result: string;
         createdAt: bigint;
@@ -366,7 +376,7 @@ export interface ShadowStrike extends BaseContract {
   >;
 
   filters: {
-    "BattleResolvedEncrypted(address,address,bytes32,bytes32)": TypedContractEvent<
+    "BattleResolvedEncrypted(address,address,uint256,bytes32)": TypedContractEvent<
       BattleResolvedEncryptedEvent.InputTuple,
       BattleResolvedEncryptedEvent.OutputTuple,
       BattleResolvedEncryptedEvent.OutputObject

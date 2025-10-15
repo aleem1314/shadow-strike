@@ -17,6 +17,7 @@ contract ShadowStrike is SepoliaConfig {
     }
 
     struct BattleRecord {
+        uint256 id;
         address opponent; // Opponent address
         euint32 result; // Encrypted result: 0 = lost, 1 = win, 2 = draw
         uint256 createdAt;
@@ -33,14 +34,16 @@ contract ShadowStrike is SepoliaConfig {
     event BattleResolvedEncrypted(
         address indexed challenger,
         address indexed opponent,
-        euint32 encP1Wins, // enc boolean: 1 => challenger has greater remaining HP
-        euint32 encDraw // enc boolean: 1 => draw (equal remaining HP)
+        uint256 battleId,
+        euint32 encResult // result: 0 = lost, 1 = win, 2 = draw
     );
 
     /// @notice Register your encrypted battle stats with a chosen character name.
     /// @dev Stats are generated randomly within a max value of 100.
     /// @param name The name of the player's character
     function registerPlayer(string calldata name) external {
+        require(!players[msg.sender].registered, "Player already registered");
+
         // Generate random encrypted stats (128)
         euint32 attack = FHE.randEuint32(128);
         euint32 defense = FHE.randEuint32(128);
@@ -56,10 +59,12 @@ contract ShadowStrike is SepoliaConfig {
         emit PlayerRegistered(msg.sender, name);
     }
 
+    uint256 public battleCounter = 0;
+
     /// @notice Start a battle between msg.sender and another player.
     /// @param opponent The address of the player you want to battle.
     /// @dev Winner is decided privately using encrypted arithmetic. Only the winner address is revealed.
-    function battle(address opponent) external returns (euint32 encP1Wins, euint32 encDraw) {
+    function battle(address opponent) external returns (euint32 encResult) {
         address challenger = msg.sender;
         require(players[challenger].registered, "Challenger not registered");
         require(players[opponent].registered, "Opponent not registered");
@@ -84,44 +89,60 @@ contract ShadowStrike is SepoliaConfig {
         euint32 zero = FHE.asEuint32(0);
         euint32 two = FHE.asEuint32(2); // for draw
 
-        // Compute encrypted flags
-        encP1Wins = FHE.select(condP1Wins, one, zero);
-        encDraw = FHE.select(condDraw, one, zero);
-
         // Encrypted result code: 2 = draw, 1 = win, 0 = loss
-        euint32 encResult = FHE.select(condDraw, two, FHE.select(condP1Wins, one, zero));
+        encResult = FHE.select(condDraw, two, FHE.select(condP1Wins, one, zero));
         euint32 encOpponentResult = FHE.select(condDraw, two, FHE.select(condP1Wins, zero, one));
 
-        // Allow access to small encrypted flags
-        FHE.allowThis(encP1Wins);
-        FHE.allow(encP1Wins, challenger);
-        FHE.allow(encP1Wins, opponent);
-
-        FHE.allowThis(encDraw);
-        FHE.allow(encDraw, challenger);
-        FHE.allow(encDraw, opponent);
-
+        // Allow battle result decryption for players
+        FHE.allowThis(encResult);
         FHE.allow(encResult, challenger);
+        FHE.allowThis(encOpponentResult);
         FHE.allow(encOpponentResult, opponent);
 
         // Update encrypted HPs
         players[opponent].hp = newBHP;
         players[challenger].hp = newAHP;
 
-        FHE.allow(newBHP, opponent);
-        FHE.allow(newAHP, challenger);
+        FHE.allow(players[opponent].hp, opponent);
+        FHE.allow(players[challenger].hp, challenger);
+
+        FHE.allowThis(players[opponent].hp);
+        FHE.allowThis(players[challenger].hp);
+
+        // Increment global counter for unique ID
+        battleCounter++;
+
+        // Create BattleRecord and allow decryption
+        BattleRecord memory challengerRecord = BattleRecord({
+            id: battleCounter,
+            opponent: opponent,
+            result: encResult,
+            createdAt: block.timestamp
+        });
+        BattleRecord memory opponentRecord = BattleRecord({
+            id: battleCounter,
+            opponent: challenger,
+            result: encOpponentResult,
+            createdAt: block.timestamp
+        });
 
         // Store battle history
-        battleHistory[challenger].push(
-            BattleRecord({opponent: opponent, result: encResult, createdAt: block.timestamp})
-        );
+        battleHistory[challenger].push(challengerRecord);
+        battleHistory[opponent].push(opponentRecord);
 
-        battleHistory[opponent].push(
-            BattleRecord({opponent: challenger, result: encOpponentResult, createdAt: block.timestamp})
-        );
+        // Now allow decryption for stored results
 
-        emit BattleResolvedEncrypted(challenger, opponent, encP1Wins, encDraw);
-        return (encP1Wins, encDraw);
+        FHE.allowThis(battleHistory[challenger][battleHistory[challenger].length - 1].result);
+        FHE.allowThis(battleHistory[opponent][battleHistory[opponent].length - 1].result);
+        FHE.allow(battleHistory[challenger][battleHistory[challenger].length - 1].result, challenger);
+        FHE.allow(battleHistory[opponent][battleHistory[opponent].length - 1].result, opponent);
+
+        FHE.allow(battleHistory[challenger][battleHistory[challenger].length - 1].result, opponent);
+        FHE.allow(battleHistory[opponent][battleHistory[opponent].length - 1].result, challenger);
+
+        emit BattleResolvedEncrypted(challenger, opponent, battleCounter, encResult);
+
+        return (encResult);
     }
 
     /// @notice View if a player is registered.

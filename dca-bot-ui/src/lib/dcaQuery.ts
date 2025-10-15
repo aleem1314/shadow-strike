@@ -10,7 +10,7 @@ export interface Player {
     hp: string
     registered: boolean
     name: string
-    address?: string
+    address: string
 }
 
 export async function getPlayer(address: string): Promise<Player> {
@@ -43,8 +43,6 @@ export async function getPlayers(): Promise<Player[]> {
         const players: Player[] = [];
         const playersAddress: string[] = await contract.getAllPlayers();
 
-        console.log("Players:", playersAddress);
-
         for (const addr of playersAddress) {
             const player = await contract.getPlayer(addr);
 
@@ -70,7 +68,8 @@ export async function getPlayers(): Promise<Player[]> {
 
 export interface BattleRecord {
     opponent: string;
-    result: number;
+    result: string;
+    createdAt: string
 }
 
 export async function getBattleHistory(address: string): Promise<BattleRecord[]> {

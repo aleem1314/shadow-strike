@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useWalletStore } from "../store/walletStore";
 import { useSnackbar } from "../hooks/useSnackbar";
 import { getPlayer, getPlayers, type Player } from "../lib/dcaQuery";
+import { battle } from "../lib/dcaTx";
+import { decrypt } from "../lib/fhe";
 
 const BattleArenaPage: React.FC = () => {
     const [search, setSearch] = useState("");
@@ -11,26 +13,35 @@ const BattleArenaPage: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [players, setPlayers] = useState<Player[]>([]);
 
-      const [challenger, setChallenger] = useState<Player | undefined>();
-    
-      useEffect(() => {
+    const [challenger, setChallenger] = useState<Player | undefined>();
+
+    const [battleId, setBattleId] = useState<number | null>(null);
+    const [encResult, setEncResult] = useState<string | null>(null);
+    const [battleResult, setBattleResult] = useState<number | null>(null);
+    const [decrypting, setDecrypting] = useState(false);
+
+    useEffect(() => {
         if (wallet.account) {
-          setLoading(true);
-          getPlayer(wallet.account)
-            .then((player: Player) => {
-              setChallenger({
-                ...player,
-                address: wallet.account || "-",
-              });
-            })
-            .catch((err: any) => {
-              showSnackbar(err.message || err);
-            })
-            .finally(() => {
-              setLoading(false);
-            })
+            setLoading(true);
+            getPlayer(wallet.account)
+                .then((player: Player) => {
+                    setChallenger({
+                        name: player.name,
+                        attack: player.attack,
+                        defense: player.defense,
+                        hp: player.hp,
+                        registered: player.registered,
+                        address: wallet.account || "-",
+                    });
+                })
+                .catch((err: any) => {
+                    showSnackbar(err.message || err);
+                })
+                .finally(() => {
+                    setLoading(false);
+                })
         }
-      }, [wallet]);
+    }, [wallet]);
 
     const [mode, setMode] = useState<"fight" | "choose">("choose");
 
@@ -39,10 +50,11 @@ const BattleArenaPage: React.FC = () => {
             setLoading(true);
             getPlayers()
                 .then((players: Player[]) => {
-                    setPlayers(players);
+                    const otherPlayers = players.filter(player => player.address.toLowerCase() !== wallet?.account!!.toLowerCase());
+                    setPlayers(otherPlayers);
                 })
                 .catch((err: any) => {
-                    showSnackbar(err.message || err);
+                    showSnackbar(err.message || err, "error");
                 })
                 .finally(() => {
                     setLoading(false);
@@ -61,9 +73,44 @@ const BattleArenaPage: React.FC = () => {
         setOpponent({
             address: address,
             name: name,
-        })
+        });
+        setBattleId(null);
+        setEncResult(null);
+        setBattleResult(null);
     }
 
+    const [battleLoading, setBattleLoading] = useState(false);
+    const onClickBattle = async () => {
+        if (!opponent?.address) return;
+
+        setBattleLoading(true);
+        try {
+            const result = await battle(opponent.address);
+            setBattleId(result.battleID ? parseInt(result.battleID) : 0);
+            setEncResult(result.encResult || "");
+            showSnackbar("transaction broadcasted", "tx-success", result.hash);
+
+        } catch (err: any) {
+            showSnackbar(err.message || err, "error");
+        } finally {
+            setBattleLoading(false);
+        }
+    }
+
+
+    const onDecryptResult = async () => {
+        if (!battleId || !encResult) return;
+        setDecrypting(true);
+        try {
+            const result = await decrypt([encResult]); // call backend or ethers contract to decrypt
+            console.log(result);
+            setBattleResult(result); // 0 = loss, 1 = win, 2 = draw
+        } catch (err: any) {
+            showSnackbar(err.message || err, "error");
+        } finally {
+            setDecrypting(false);
+        }
+    };
 
     return (
         <>
@@ -142,31 +189,52 @@ const BattleArenaPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Battle Log */}
-                        <div className="mt-12 bg-gray-900 rounded-xl p-6 text-left max-h-64 overflow-y-auto space-y-3 shadow-inner border border-gray-700">
-                            <p>🗡️ You launched a secret attack!</p>
-                            <p>🛡️ Opponent countered with encrypted defense!</p>
-                            <p>💥 Encrypted damage computed privately!</p>
-                            <p>🤖 Smart contract verified encrypted battle result!</p>
-                        </div>
 
                         {/* Result + Actions */}
                         <div className="mt-10">
-                            <div className="text-3xl font-bold text-green-500 mb-6">✅ You Won (Privately)!</div>
-                            <div className="space-x-6">
-                                <a
-                                    href="/arena"
-                                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition"
-                                >
-                                    ⚔️ Battle Again
-                                </a>
-                                <a
-                                    href="/leaderboard"
-                                    className="px-6 py-3 bg-gray-700 hover:bg-gray-800 rounded-lg transition"
-                                >
-                                    🏆 View Leaderboard
-                                </a>
-                            </div>
+                            {
+                                encResult
+                                    ?
+
+                                    <div className="space-x-6">
+                                        <button
+                                            className={`px-6 py-3 rounded-lg transition hover:cursor-pointer ${decrypting
+                                                ? "bg-yellow-500 text-black hover:bg-yellow-600"
+                                                : "bg-green-600 text-white hover:bg-green-800"
+                                                }`}
+                                            onClick={onDecryptResult}
+                                            disabled={decrypting}
+                                        >
+                                            {
+                                                decrypting ? `Please wait...` : `Decrypt Result`
+                                            }
+                                        </button>
+                                    </div>
+                                    :
+
+                                    <div className="space-x-6">
+                                        <button
+                                            className={`px-6 py-3 rounded-lg transition hover:cursor-pointer ${battleLoading
+                                                ? "bg-yellow-500 text-black hover:bg-yellow-600"
+                                                : "bg-green-600 text-white hover:bg-green-800"
+                                                }`}
+                                            onClick={onClickBattle}
+                                            disabled={battleLoading}
+                                        >
+                                            {
+                                                battleLoading ? `Please wait...` : `⚔️ Battle`
+                                            }
+                                        </button>
+                                    </div>
+                            }
+
+                            {battleResult !== null && (
+                                <div className="text-3xl font-bold text-green-500">
+                                    {battleResult === 0 && "❌ You Lost!"}
+                                    {battleResult === 1 && "✅ You Won!"}
+                                    {battleResult === 2 && "🤝 Draw!"}
+                                </div>
+                            )}
                         </div>
                     </div>
 

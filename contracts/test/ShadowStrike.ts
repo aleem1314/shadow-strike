@@ -13,11 +13,11 @@ type Signers = {
 async function deployFixture() {
   const factory = (await ethers.getContractFactory("ShadowStrike")) as ShadowStrike__factory;
   const game = (await factory.deploy()) as ShadowStrike;
-  const addr = await game.getAddress(); // use getAddress instead of .address
+  const addr = await game.getAddress();
   return { game, addr };
 }
 
-describe("ShadowStrike Battle Game", function () {
+describe("ShadowStrike Sequential Battles", function () {
   let signers: Signers;
   let game: ShadowStrike;
   let gameAddr: string;
@@ -31,56 +31,69 @@ describe("ShadowStrike Battle Game", function () {
     ({ game, addr: gameAddr } = await deployFixture());
   });
 
-  // Helper: register a player
-  async function registerPlayer(player: HardhatEthersSigner, hp: number, attack: number, defense: number) {
-    await (await game.connect(player).registerPlayer("hulk"
-    )).wait();
+  // Register a player with a name
+  async function registerPlayer(player: HardhatEthersSigner, name: string) {
+    await (await game.connect(player).registerPlayer(name)).wait();
   }
 
-  // Helper: battle and decrypt for both players
+  // Battle helper: returns decrypted results for both players
   async function battleAndDecrypt(challenger: HardhatEthersSigner, opponent: HardhatEthersSigner) {
     const tx = await game.connect(challenger).battle(opponent.address);
-    await tx.wait();
+    const receipt = await tx.wait();
+
+    // Parse BattleResolvedEncrypted event
+    const event = receipt.logs
+      .map((log: any) => {
+        try {
+          return game.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find((parsed) => parsed?.name === "BattleResolvedEncrypted");
+
+    if (!event) throw new Error("BattleResolvedEncrypted event not found");
+
+    const battleIdNum = Number(event.args.battleId);
 
     const challengerHistory = await game.getBattleHistory(challenger.address);
     const opponentHistory = await game.getBattleHistory(opponent.address);
 
-    const encChallengerResult = challengerHistory[0].result;
-    const encOpponentResult = opponentHistory[0].result;
+    const challengerRecord = challengerHistory.find((r: any) => Number(r.id) === battleIdNum);
+    const opponentRecord = opponentHistory.find((r: any) => Number(r.id) === battleIdNum);
 
-    const decryptedChallenger = await fhevm.userDecryptEuint(FhevmType.euint32, encChallengerResult, gameAddr, challenger);
-    const decryptedOpponent = await fhevm.userDecryptEuint(FhevmType.euint32, encOpponentResult, gameAddr, opponent);
+    if (!challengerRecord || !challengerRecord.result) throw new Error("Challenger record not found");
+    if (!opponentRecord || !opponentRecord.result) throw new Error("Opponent record not found");
+
+    const decryptedChallenger = await fhevm.userDecryptEuint(
+      FhevmType.euint32,
+      challengerRecord.result,
+      gameAddr,
+      challenger
+    );
+    const decryptedOpponent = await fhevm.userDecryptEuint(
+      FhevmType.euint32,
+      opponentRecord.result,
+      gameAddr,
+      opponent
+    );
 
     return { decryptedChallenger, decryptedOpponent };
   }
 
-  it("Scenario 1: Both users with same HP, Attack, Defense → Draw", async function () {
-    await registerPlayer(signers.alice, 100, 30, 20);
-    await registerPlayer(signers.bob, 100, 30, 20);
+  it("Two sequential battles: both players can decrypt results", async function () {
+    // Register players
+    await registerPlayer(signers.alice, "Alice");
+    await registerPlayer(signers.bob, "Bob");
 
-    // const { decryptedChallenger, decryptedOpponent } = await battleAndDecrypt(signers.alice, signers.bob);
+    // First fight
+    const firstFight = await battleAndDecrypt(signers.alice, signers.bob);
+    expect([0, 1, 2]).to.include(Number(firstFight.decryptedChallenger));
+    expect([0, 1, 2]).to.include(Number(firstFight.decryptedOpponent));
 
-    // expect(decryptedChallenger).to.eq(2); // Draw
-    // expect(decryptedOpponent).to.eq(2);   // Draw
+    // Second fight
+    const secondFight = await battleAndDecrypt(signers.alice, signers.bob);
+    expect([0, 1, 2]).to.include(Number(secondFight.decryptedChallenger));
+    expect([0, 1, 2]).to.include(Number(secondFight.decryptedOpponent));
   });
-
-  // it("Scenario 2: Player A (Alice) has more Attack → Alice wins", async function () {
-  //   await registerPlayer(signers.alice, 100, 40, 20);
-  //   await registerPlayer(signers.bob, 100, 30, 20);
-
-  //   const { decryptedChallenger, decryptedOpponent } = await battleAndDecrypt(signers.alice, signers.bob);
-
-  //   expect(decryptedChallenger).to.eq(1); // Alice wins
-  //   expect(decryptedOpponent).to.eq(0);   // Bob loses
-  // });
-
-  // it("Scenario 3: Player B (Bob) has more Attack → Bob wins", async function () {
-  //   await registerPlayer(signers.alice, 100, 30, 20);
-  //   await registerPlayer(signers.bob, 100, 40, 20);
-
-  //   const { decryptedChallenger, decryptedOpponent } = await battleAndDecrypt(signers.alice, signers.bob);
-
-  //   expect(decryptedChallenger).to.eq(0); // Alice loses
-  //   expect(decryptedOpponent).to.eq(1);   // Bob wins
-  // });
 });
