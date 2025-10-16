@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { register } from "../lib/dcaTx";
 import { useSnackbar } from "../hooks/useSnackbar";
-import { useWalletStore } from "../store/walletStore";
 
 interface FighterFormData {
     name: string;
@@ -11,10 +10,7 @@ const RegisterPage: React.FC = () => {
 
     const { showSnackbar } = useSnackbar();
 
-    const wallet = useWalletStore();
     const [loading, setLoading] = useState<boolean>(false);
-
-
     const [formData, setFormData] = useState<FighterFormData>({
         name: "",
     });
