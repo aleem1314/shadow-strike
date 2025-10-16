@@ -75,6 +75,7 @@ export interface ShadowStrikeInterface extends Interface {
       | "players"
       | "protocolId"
       | "registerPlayer"
+      | "testing"
   ): FunctionFragment;
 
   getEvent(
@@ -122,6 +123,7 @@ export interface ShadowStrikeInterface extends Interface {
     functionFragment: "registerPlayer",
     values: [string]
   ): string;
+  encodeFunctionData(functionFragment: "testing", values?: undefined): string;
 
   decodeFunctionResult(functionFragment: "battle", data: BytesLike): Result;
   decodeFunctionResult(
@@ -155,6 +157,7 @@ export interface ShadowStrikeInterface extends Interface {
     functionFragment: "registerPlayer",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "testing", data: BytesLike): Result;
 }
 
 export namespace BattleResolvedEncryptedEvent {
@@ -291,6 +294,8 @@ export interface ShadowStrike extends BaseContract {
 
   registerPlayer: TypedContractMethod<[name: string], [void], "nonpayable">;
 
+  testing: TypedContractMethod<[], [string], "view">;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -359,6 +364,9 @@ export interface ShadowStrike extends BaseContract {
   getFunction(
     nameOrSignature: "registerPlayer"
   ): TypedContractMethod<[name: string], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testing"
+  ): TypedContractMethod<[], [string], "view">;
 
   getEvent(
     key: "BattleResolvedEncrypted"

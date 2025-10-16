@@ -17,9 +17,9 @@ Make sure you have the following installed:
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/vitwit/zama-dca-bot.git
-cd zama-dca-bot
-cd dca-bot-ui
+git clone https://github.com/aleem1314/shadow-strike.git
+cd shadow-strike
+cd app
 npm install
 ```
 
@@ -36,8 +36,7 @@ This project uses environment variables for configuration.
 2. Open `.env` and update values as needed:
 
 ```
-VITE_USDC_CONTRACT="0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
-VITE_DCA_CONTRACT="dca-contract-address"
+VITE_CONTRACT="dca-contract-address"
 VITE_RPC_URL="https://sepolia.infura.io/v3/api-key"
 VITE_TX_HASH_URL="https://sepolia.etherscan.io/tx/"
 ```

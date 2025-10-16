@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useWalletStore } from "../store/walletStore";
 import { useSnackbar } from "../hooks/useSnackbar";
-import { getPlayer, getPlayers, type Player } from "../lib/dcaQuery";
+import { getPlayer, getPlayers, testing, type Player } from "../lib/dcaQuery";
 import { battle } from "../lib/dcaTx";
 import { decrypt } from "../lib/fhe";
 
@@ -79,10 +79,17 @@ const BattleArenaPage: React.FC = () => {
         setBattleResult(null);
     }
 
+    const reset = async () => {
+        setMode("choose");
+        setOpponent(undefined);
+        setBattleId(null);
+        setEncResult(null);
+        setBattleResult(null);
+    }
+
     const [battleLoading, setBattleLoading] = useState(false);
     const onClickBattle = async () => {
         if (!opponent?.address) return;
-
         setBattleLoading(true);
         try {
             const result = await battle(opponent.address);
@@ -102,9 +109,8 @@ const BattleArenaPage: React.FC = () => {
         if (!battleId || !encResult) return;
         setDecrypting(true);
         try {
-            const result = await decrypt([encResult]); // call backend or ethers contract to decrypt
-            console.log(result);
-            setBattleResult(result); // 0 = loss, 1 = win, 2 = draw
+            const result = await decrypt([encResult]);
+            setBattleResult(Number(result[encResult])); // 0 = loss, 1 = win, 2 = draw
         } catch (err: any) {
             showSnackbar(err.message || err, "error");
         } finally {
@@ -195,21 +201,31 @@ const BattleArenaPage: React.FC = () => {
                             {
                                 encResult
                                     ?
+                                    battleResult === null ?
 
-                                    <div className="space-x-6">
-                                        <button
-                                            className={`px-6 py-3 rounded-lg transition hover:cursor-pointer ${decrypting
-                                                ? "bg-yellow-500 text-black hover:bg-yellow-600"
-                                                : "bg-green-600 text-white hover:bg-green-800"
-                                                }`}
-                                            onClick={onDecryptResult}
-                                            disabled={decrypting}
-                                        >
-                                            {
-                                                decrypting ? `Please wait...` : `Decrypt Result`
-                                            }
-                                        </button>
-                                    </div>
+                                        <div className="space-x-6">
+                                            <button
+                                                className={`px-6 py-3 rounded-lg transition hover:cursor-pointer ${decrypting
+                                                    ? "bg-yellow-500 text-black hover:bg-yellow-600"
+                                                    : "bg-green-600 text-white hover:bg-green-800"
+                                                    }`}
+                                                onClick={onDecryptResult}
+                                                disabled={decrypting}
+                                            >
+                                                {
+                                                    decrypting ? `Please wait...` : `Decrypt Result`
+                                                }
+                                            </button>
+                                        </div>
+                                        :
+                                        <div className="space-x-6 mb-6">
+                                            <button
+                                                className={`px-6 py-3 rounded-lg transition hover:cursor-pointer bg-green-600 text-white hover:bg-green-800`}
+                                                onClick={reset}
+                                            >
+                                                Play Again
+                                            </button>
+                                        </div>
                                     :
 
                                     <div className="space-x-6">

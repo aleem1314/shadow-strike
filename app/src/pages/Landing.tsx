@@ -40,21 +40,36 @@ const Landing: React.FC = () => {
           Your stats stay private - but the winner is always clear.
         </p>
         <div className="space-x-4">
-          <button
-            onClick={() => {
-              navigate("/register")
-            }}
-            className={`px-6 py-3 rounded-lg font-semibold
-    ${loading || player?.registered
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700 hover:cursor-pointer"}
-  `}
-            disabled={loading || player?.registered}
-            title={player?.registered ? "Character is already registered" : ""}
+          {
+            player?.registered ?
 
-          >
-            Register Player
-          </button>
+              <button
+                onClick={() => {
+                  navigate("/battle-arena")
+                }}
+                className={`px-6 py-3 rounded-lg font-semibold bg-green-600 hover:bg-green-700 hover:cursor-pointer`}
+
+              >
+                New Battle
+              </button>
+
+              :
+              <button
+                onClick={() => {
+                  navigate("/register")
+                }}
+                className={`px-6 py-3 rounded-lg font-semibold
+              ${loading || player?.registered
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700 hover:cursor-pointer"}
+            `}
+                disabled={loading || player?.registered}
+                title={player?.registered ? "Character is already registered" : ""}
+
+              >
+                Register Player
+              </button>
+          }
           <button
             onClick={() => {
               navigate("/how-works")

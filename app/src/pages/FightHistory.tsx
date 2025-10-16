@@ -4,6 +4,14 @@ import { useWalletStore } from "../store/walletStore";
 import { useSnackbar } from "../hooks/useSnackbar";
 import { decrypt } from "../lib/fhe";
 
+export interface HistoryRecord {
+    opponent: string;
+    result: any;
+    createdAt: string;
+    decrypted: boolean;
+}
+
+
 function formatTimestamp(timestamp: number): string {
     const date = new Date(timestamp * 1000);
 
@@ -22,25 +30,11 @@ const FightHistory: React.FC = () => {
     const { showSnackbar } = useSnackbar();
 
     const wallet = useWalletStore();
-    const [records, setRecords] = useState<BattleRecord[] | undefined>();
+    const [records, setRecords] = useState<HistoryRecord[] | undefined>();
 
     const [decryptLoading, setDecryptLoading] = useState(false);
-    const onDecryptAll = async () => {
-        setDecryptLoading(true);
-        try {
-            const result = await decrypt(
-                records?.map(record => String(record.result)) || []
-            );
-            console.log(result);
-
-        } catch (err: any) {
-            showSnackbar(err.message || JSON.stringify(err), "error");
-        } finally {
-            setDecryptLoading(false);
-        }
-    }
-
     const [decryptIndex, setDecryptIndex] = useState<number>(-1);
+
     const onDecrypt = async (cyphertext: string, i: number) => {
         setDecryptIndex(i);
         setDecryptLoading(true);
@@ -48,7 +42,22 @@ const FightHistory: React.FC = () => {
             const result = await decrypt(
                 [cyphertext]
             );
-            console.log(result);
+
+            const decryptedValue = result[cyphertext]; // this is 0, 1, or 2
+
+            setRecords((prevRecords) => {
+                if (!prevRecords) return prevRecords;
+                const updated = [...prevRecords];
+                updated[i] = {
+                    ...updated[i],
+                    opponent: updated[i].opponent,
+                    result: decryptedValue,
+                    decrypted: true,
+                };
+                return updated;
+            });
+
+            console.log(result[cyphertext]);
         } catch (err: any) {
             showSnackbar(err.message || JSON.stringify(err), "error");
         } finally {
@@ -62,7 +71,17 @@ const FightHistory: React.FC = () => {
             setLoading(true);
             getBattleHistory(wallet.account)
                 .then((records: BattleRecord[]) => {
-                    setRecords(records);
+                    let tableItems: HistoryRecord[] = [];
+                    for (let index = 0; index < records.length; index++) {
+                        const element = records[index];
+                        tableItems.push({
+                            decrypted: false,
+                            createdAt: element.createdAt,
+                            opponent: element.opponent,
+                            result: element.result
+                        })
+                    }
+                    setRecords(tableItems);
                 })
                 .catch((err: any) => {
                     showSnackbar(err.message || err);
@@ -77,18 +96,6 @@ const FightHistory: React.FC = () => {
         <div className="bg-gray-800 rounded-2xl p-6 shadow-lg mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold">⚔️ Fight History</h2>
-                <button
-                    onClick={onDecryptAll}
-                    disabled={decryptLoading}
-                    className={`px-6 py-3 rounded-lg transition hover:cursor-pointer ${decryptLoading
-                        ? "bg-yellow-500 text-black hover:bg-yellow-600"
-                        : "bg-green-600 text-white hover:bg-green-800"
-                        }`}
-                >
-                    {
-                        decryptLoading && decryptIndex === -1 ? `Decrypting...` : 'Decrypt All'
-                    }
-                </button>
             </div>
 
             {loading ? (
@@ -116,11 +123,27 @@ const FightHistory: React.FC = () => {
                                         <tr key={index} className="hover:bg-gray-700/40 transition">
                                             <td className="px-4 py-2 text-gray-100">{index + 1}</td>
                                             <td className="px-4 py-2 text-purple-400 font-semibold">{fight.opponent}</td>
-                                            <td
-                                                className={`px-4 py-2 text-center font-bold`}
-                                            >
-                                                {fight.result}
+                                            <td className="px-4 py-2 text-center font-bold">
+                                                {fight.result === "0" || fight.result === 0n ? (
+                                                    <span className="px-3 py-1 rounded-full bg-red-200 text-red-700 text-sm font-semibold">
+                                                        ❌ Lost
+                                                    </span>
+                                                ) : fight.result === "1" || fight.result === 1n ? (
+                                                    <span className="px-3 py-1 rounded-full bg-green-200 text-green-700 text-sm font-semibold">
+                                                        ✅ Won
+                                                    </span>
+                                                ) : fight.result === "2" || fight.result === 2n ? (
+                                                    <span className="px-3 py-1 rounded-full bg-yellow-200 text-yellow-700 text-sm font-semibold">
+                                                        🤝 Draw
+                                                    </span>
+                                                ) : (
+                                                    // If still ciphertext or not yet decrypted
+                                                    <span className="px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-mono">
+                                                        {String(fight.result).slice(0, 18)}...
+                                                    </span>
+                                                )}
                                             </td>
+
                                             <td className="px-4 py-2 text-center text-gray-200">{formatTimestamp(parseInt(fight.createdAt) || 0)}</td>
 
                                             <td className="px-4 py-2 text-center text-gray-200">
@@ -128,6 +151,7 @@ const FightHistory: React.FC = () => {
                                                     onClick={() => {
                                                         onDecrypt(fight.result, index)
                                                     }}
+                                                    disabled={fight.decrypted}
                                                     className={`px-3 py-2 rounded-lg transition hover:cursor-pointer ${decryptLoading
                                                         ? "bg-yellow-500 text-black hover:bg-yellow-600"
                                                         : "bg-green-600 text-white hover:bg-green-800"

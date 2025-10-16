@@ -3,6 +3,7 @@
 import { ethers } from "ethers";
 import { ABI, contractAddress } from "./dcaTx";
 import type { ShadowStrike } from "./ShadowStrike";
+import { decrypt } from "./fhe";
 
 export interface Player {
     attack: string
@@ -86,6 +87,31 @@ export async function getBattleHistory(address: string): Promise<BattleRecord[]>
     try {
         const result: any = contract.getBattleHistory(address);
         return result as unknown as BattleRecord[];
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+
+export async function testing(): Promise<string> {
+
+    const provider = new ethers.JsonRpcProvider(import.meta.env.VITE_RPC_URL);
+
+    const contract = new ethers.Contract(
+        contractAddress,
+        ABI,
+        provider
+    ) as unknown as ShadowStrike;
+
+
+    try {
+        const result: any = await contract.testing();
+        console.log(result);
+
+        const dec = await decrypt([result]);
+        console.log(dec);
+        return result as unknown as string;
     } catch (err) {
         console.log(err);
         throw err;
