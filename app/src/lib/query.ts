@@ -1,7 +1,7 @@
 
 
 import { ethers } from "ethers";
-import { ABI, contractAddress } from "./dcaTx";
+import { ABI, contractAddress } from "./tx";
 import type { ShadowStrike } from "./ShadowStrike";
 import { decrypt } from "./fhe";
 

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useWalletStore } from "../store/walletStore";
 import { useSnackbar } from "../hooks/useSnackbar";
-import { getPlayer, getPlayers, type Player } from "../lib/dcaQuery";
-import { battle } from "../lib/dcaTx";
+import { getPlayer, getPlayers, type Player } from "../lib/query";
+import { battle } from "../lib/tx";
 import { decrypt } from "../lib/fhe";
 
 const BattleArenaPage: React.FC = () => {

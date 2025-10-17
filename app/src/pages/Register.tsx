@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { register } from "../lib/dcaTx";
+import { register } from "../lib/tx";
 import { useSnackbar } from "../hooks/useSnackbar";
 
 interface FighterFormData {

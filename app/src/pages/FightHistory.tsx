@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getBattleHistory, type BattleRecord } from "../lib/dcaQuery";
+import { getBattleHistory, type BattleRecord } from "../lib/query";
 import { useWalletStore } from "../store/walletStore";
 import { useSnackbar } from "../hooks/useSnackbar";
 import { decrypt } from "../lib/fhe";

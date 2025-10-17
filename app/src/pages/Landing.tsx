@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useWalletStore } from "../store/walletStore";
-import { getPlayer, type Player } from "../lib/dcaQuery";
+import { getPlayer, type Player } from "../lib/query";
 import { useSnackbar } from "../hooks/useSnackbar";
 
 const Landing: React.FC = () => {

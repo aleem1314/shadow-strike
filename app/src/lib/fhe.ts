@@ -1,5 +1,5 @@
 import { getFheInstance } from "./fheService";
-import { contractAddress, getProviderAndSigner } from "./dcaTx";
+import { contractAddress, getProviderAndSigner } from "./tx";
 import type { HandleContractPair } from "@zama-fhe/relayer-sdk/web";
 
 export async function decrypt(inputs: string[]): Promise<any> {
