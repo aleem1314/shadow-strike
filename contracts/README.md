@@ -1,7 +1,10 @@
-# FHEVM Hardhat Template
+# Shadow Strike (FHEVM + Hardhat)
 
-A Hardhat-based template for developing Fully Homomorphic Encryption (FHE) enabled Solidity smart contracts using the
-FHEVM protocol by Zama.
+A Hardhat-based project implementing a simple Onchain battle game using FHEVM.
+
+Shadow Strike is a privacy-first on-chain battle game powered by Zama’s FHEVM, where all battles occur on encrypted data. 
+Players fight using hidden stats, revealing only their final outcomes.
+
 
 ## Quick Start
 
@@ -68,15 +71,21 @@ For detailed instructions see:
 ## 📁 Project Structure
 
 ```
-fhevm-hardhat-template/
-├── contracts/           # Smart contract source files
-│   └── FHECounter.sol   # Example FHE counter contract
-├── deploy/              # Deployment scripts
-├── tasks/               # Hardhat custom tasks
-├── test/                # Test files
-├── hardhat.config.ts    # Hardhat configuration
-└── package.json         # Dependencies and scripts
+shadow-strike/contracts/
+├── contracts/
+│   ├── ShadowStrike.sol           # Smart contract
+├── deploy/                        # Deployment scripts
+├── test/                          # Hardhat tests
+├── hardhat.config.ts              # Hardhat config
+└── package.json
 ```
+
+## ⚙️ Core Features
+
+* **Private Battles:** All computations happen on encrypted data - no one can see player stats or outcomes on-chain.
+* **Fair Gameplay:** Battle results are determined securely using FHE-based encrypted arithmetic.
+* **Selective Decryption:** Only participating players can decrypt and view their own battle outcomes.
+* **On-chain History:** Every battle is stored on-chain, preserving an auditable yet private record.
 
 ## 📜 Available Scripts
 
@@ -99,12 +108,7 @@ fhevm-hardhat-template/
 
 This project is licensed under the BSD-3-Clause-Clear License. See the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
-
-- **GitHub Issues**: [Report bugs or request features](https://github.com/zama-ai/fhevm/issues)
-- **Documentation**: [FHEVM Docs](https://docs.zama.ai)
-- **Community**: [Zama Discord](https://discord.gg/zama)
 
 ---
 
-**Built with ❤️ by the Zama team**
+**Built with ❤️ using Zama FHEVM**
