@@ -4,7 +4,7 @@
 
 ## Table of contents
 
-- What is Shadow Strike?
+- [What is Shadow Strike?](#what-is-shadow-strike)
 - High-level flow (how a battle works)
 - Project layout & where to look next
 - License
