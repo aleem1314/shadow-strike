@@ -1,6 +1,6 @@
 # Shadow Strike
 
-This is the frontend application for **Confidential DCA Batch**, built with [Vite](https://vitejs.dev/), React.js and TypeScript.  
+This is the frontend application for **Shadow Strike**, built with [Vite](https://vitejs.dev/), React.js and TypeScript.  
 ---
 
 ## 🚀 Getting Started
