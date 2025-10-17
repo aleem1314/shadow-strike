@@ -5,9 +5,9 @@
 ## Table of contents
 
 - [What is Shadow Strike?](#what-is-shadow-strike)
-- High-level flow (how a battle works)
-- Project layout & where to look next
-- License
+- [High-level flow (how a battle works)](#high-level-flow-how-a-battle-works)
+- [Project layout & where to look next](#project-layout--where-to-look-next)
+- [License](#license)
 
 ## What is Shadow Strike?
 
@@ -20,7 +20,6 @@ Shadow Strike is a turn-based one-round battle game built on FHEVM where:
 - The contract emits an event including battleId so clients can reliably map the transaction to the stored encrypted result.
 
 The goal: let players compete on chain while keeping sensitive game state private.
-
 
 
 ## High-level flow (how a battle works)
@@ -52,9 +51,9 @@ Key idea: All calculations and stats stay private; only each player sees their o
     - How to connect to Sepolia testnet
 
 You can jump directly to those docs:
-- Contracts: contracts/Readme.md
-- Frontend app: app/Readme.md
+- Contracts: [contracts/Readme.md](./contracts/README.md)
+- Frontend app: [app/Readme.md](./app/README.md)
 
 ## License
 
-MIT — see LICENSE in this repository.
+MIT — see [LICENSE](./LICENSE) in this repository.
