@@ -1,4 +1,4 @@
-# Confidential DCA Batch
+# Shadow Strike
 
 This is the frontend application for **Confidential DCA Batch**, built with [Vite](https://vitejs.dev/), React.js and TypeScript.  
 ---
@@ -36,7 +36,7 @@ This project uses environment variables for configuration.
 2. Open `.env` and update values as needed:
 
 ```
-VITE_CONTRACT="dca-contract-address"
+VITE_CONTRACT="contract-address"
 VITE_RPC_URL="https://sepolia.infura.io/v3/api-key"
 VITE_TX_HASH_URL="https://sepolia.etherscan.io/tx/"
 ```
